@@ -14,10 +14,12 @@ typedef struct {
     float saldo;
     char tipo_conta[10]; 
     Transacao historico[MAX_OPERACOES]; 
+    int num_operacoes; 
+    char senha[20]; 
 } ContaBancaria;
 
 typedef struct {
-    int id_cliente;
+    int id_cliente; 
     char nome[50];
     char endereco[100];
     ContaBancaria conta;

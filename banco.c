@@ -3,16 +3,32 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Array para armazenar os clientes
 Cliente clientes[MAX_CLIENTES];
 
-// Número atual de clientes cadastrados
 int num_clientes = 0;
 
-// Implementação das funções
 
 void novoCliente() {
-    // Implementar lógica para adicionar um novo cliente
+    if (num_clientes >= MAX_CLIENTES) {
+        printf("Limite de clientes atingido. Nao e possivel adicionar mais clientes.\n");
+        return;
+    }
+
+    Cliente novo_cliente;
+    printf("Digite o nome do cliente: ");
+    scanf(" %[^\n]", novo_cliente.nome); 
+    printf("Digite o CPF do cliente: ");
+    scanf("%d", &novo_cliente.id_cliente);
+    printf("Digite o tipo de conta (comum ou plus): ");
+    scanf(" %[^\n]", novo_cliente.conta.tipo_conta);
+    printf("Digite o valor inicial da conta: ");
+    scanf("%f", &novo_cliente.conta.saldo);
+    printf("Digite a senha do cliente: ");
+    scanf(" %[^\n]", novo_cliente.conta.senha);
+
+    clientes[num_clientes++] = novo_cliente;
+
+    printf("Cliente adicionado com sucesso!\n");
 }
 
 void apagaCliente() {
