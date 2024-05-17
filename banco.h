@@ -4,25 +4,31 @@
 #define MAX_CLIENTES 1000
 #define MAX_OPERACOES 100
 
+typedef enum {
+    DEPOSITO,
+    DEBITO,
+    TRANSFERENCIA_ENTRADA,
+    TRANSFERENCIA_SAIDA
+} TipoOperacao;
+
 typedef struct {
+    TipoOperacao tipo;
+    int id_origem;
+    int id_destino;
     float valor;
-    char tipo_operacao[20]; 
-} Transacao;
+    float tarifa;
+} Operacao;
 
 typedef struct {
-    int numero_conta;
-    float saldo;
-    char tipo_conta[10]; 
-    Transacao historico[MAX_OPERACOES]; 
-    int num_operacoes; 
-    char senha[20]; 
-} ContaBancaria;
-
-typedef struct {
-    int id_cliente; 
     char nome[50];
-    char endereco[100];
-    ContaBancaria conta;
+    int id_cliente;
+    struct {
+        char tipo_conta[10];
+        float saldo;
+        char senha[20];
+        int num_operacoes;
+        Operacao operacoes[MAX_OPERACOES];
+    } conta;
 } Cliente;
 
 void novoCliente();
@@ -35,4 +41,4 @@ void transferenciaEntreContas();
 void salvarDados();
 void carregarDados();
 
-#endif 
+#endif

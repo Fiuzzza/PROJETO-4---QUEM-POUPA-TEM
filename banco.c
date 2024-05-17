@@ -143,18 +143,167 @@ void deposito() {
         printf("Cliente com CPF %d não encontrado.\n", cpf);
     }
 }
+
 void extrato() {
-    // Implementar lógica para exibir o extrato da conta
+    int cpf;
+    char senha[20];
+
+    printf("Digite o CPF do cliente: ");
+    scanf("%d", &cpf);
+
+    printf("Digite a senha do cliente: ");
+    scanf("%s", senha);
+
+    int encontrado = 0;
+    for (int i = 0; i < num_clientes; i++) {
+        if (clientes[i].id_cliente == cpf) {
+            encontrado = 1;
+            if (strcmp(clientes[i].conta.senha, senha) == 0) {
+                char nome_arquivo[50];
+                sprintf(nome_arquivo, "extrato_%d.txt", cpf);
+                FILE *arquivo = fopen(nome_arquivo, "w");
+                if (arquivo == NULL) {
+                    printf("Erro ao abrir o arquivo para escrita.\n");
+                    return;
+                }
+
+                fprintf(arquivo, "Extrato de Operacoes\n\n");
+                fprintf(arquivo, "Cliente: %s\n", clientes[i].nome);
+                fprintf(arquivo, "CPF: %d\n\n", clientes[i].id_cliente);
+                fprintf(arquivo, "Historico de Operacoes:\n");
+
+                for (int j = 0; j < clientes[i].conta.num_operacoes; j++) {
+                    Operacao op = clientes[i].conta.operacoes[j];
+                    fprintf(arquivo, "Operacao %d: ", j + 1);
+                    if (op.tipo == DEPOSITO) {
+                        fprintf(arquivo, "Deposito de %.2f\n", op.valor);
+                    } else if (op.tipo == DEBITO) {
+                        fprintf(arquivo, "Debito de %.2f (Tarifa: %.2f)\n", op.valor, op.tarifa);
+                    } else if (op.tipo == TRANSFERENCIA_ENTRADA) {
+                        fprintf(arquivo, "Transferencia recebida de %d no valor de %.2f\n", op.id_origem, op.valor);
+                    } else if (op.tipo == TRANSFERENCIA_SAIDA) {
+                        fprintf(arquivo, "Transferencia enviada para %d no valor de %.2f (Tarifa: %.2f)\n", op.id_destino, op.valor, op.tarifa);
+                    }
+                }
+
+                fclose(arquivo);
+
+                printf("Extrato gerado com sucesso. Verifique o arquivo %s\n", nome_arquivo);
+            } else {
+                printf("Senha incorreta.\n");
+            }
+            break;
+        }
+    }
+
+    if (!encontrado) {
+        printf("Cliente com CPF %d não encontrado.\n", cpf);
+    }
 }
 
 void transferenciaEntreContas() {
-    // Implementar lógica para realizar uma transferência entre contas
+    int cpf_origem, cpf_destino;
+    char senha[20];
+    float valor;
+
+    printf("Digite o CPF da conta de origem: ");
+    scanf("%d", &cpf_origem);
+
+    printf("Digite a senha da conta de origem: ");
+    scanf("%s", senha);
+
+    printf("Digite o CPF da conta de destino: ");
+    scanf("%d", &cpf_destino);
+
+    printf("Digite o valor a ser transferido: ");
+    scanf("%f", &valor);
+
+    int encontrado_origem = 0;
+    int index_origem = -1;
+    for (int i = 0; i < num_clientes; i++) {
+        if (clientes[i].id_cliente == cpf_origem) {
+            encontrado_origem = 1;
+            index_origem = i;
+            if (strcmp(clientes[i].conta.senha, senha) != 0) {
+                printf("Senha incorreta para a conta de origem.\n");
+                return;
+            }
+            break;
+        }
+    }
+
+    if (!encontrado_origem) {
+        printf("Conta de origem com CPF %d não encontrada.\n", cpf_origem);
+        return;
+    }
+
+    if (clientes[index_origem].conta.saldo < valor) {
+        printf("Saldo insuficiente na conta de origem.\n");
+        return;
+    }
+
+    int encontrado_destino = 0;
+    int index_destino = -1;
+    for (int i = 0; i < num_clientes; i++) {
+        if (clientes[i].id_cliente == cpf_destino) {
+            encontrado_destino = 1;
+            index_destino = i;
+            break;
+        }
+    }
+
+    if (!encontrado_destino) {
+        printf("Conta de destino com CPF %d não encontrada.\n", cpf_destino);
+        return;
+    }
+
+    clientes[index_origem].conta.saldo -= valor;
+    clientes[index_destino].conta.saldo += valor;
+
+    clientes[index_origem].conta.operacoes[clientes[index_origem].conta.num_operacoes].tipo = TRANSFERENCIA_SAIDA;
+    clientes[index_origem].conta.operacoes[clientes[index_origem].conta.num_operacoes].id_destino = cpf_destino;
+    clientes[index_origem].conta.operacoes[clientes[index_origem].conta.num_operacoes].valor = valor;
+    clientes[index_origem].conta.operacoes[clientes[index_origem].conta.num_operacoes].tarifa = 0;
+    clientes[index_origem].conta.num_operacoes++;
+
+    clientes[index_destino].conta.operacoes[clientes[index_destino].conta.num_operacoes].tipo = TRANSFERENCIA_ENTRADA;
+    clientes[index_destino].conta.operacoes[clientes[index_destino].conta.num_operacoes].id_origem = cpf_origem;
+    clientes[index_destino].conta.operacoes[clientes[index_destino].conta.num_operacoes].valor = valor;
+    clientes[index_destino].conta.num_operacoes++;
+
+    printf("Transferência realizada com sucesso.\n");
 }
 
 void salvarDados() {
-    // Implementar lógica para salvar os dados em arquivo binário
+    FILE *arquivo = fopen("dados_clientes.bin", "wb");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para escrita.\n");
+        return;
+    }
+
+    fwrite(&num_clientes, sizeof(int), 1, arquivo);
+
+    for (int i = 0; i < num_clientes; i++) {
+        fwrite(&clientes[i], sizeof(Cliente), 1, arquivo);
+    }
+
+    fclose(arquivo);
+    printf("Dados dos clientes salvos com sucesso.\n");
 }
 
 void carregarDados() {
-    // Implementar lógica para carregar os dados de arquivo binário
+    FILE *arquivo = fopen("dados_clientes.bin", "rb");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para leitura.\n");
+        return;
+    }
+
+    fread(&num_clientes, sizeof(int), 1, arquivo);
+
+    for (int i = 0; i < num_clientes; i++) {
+        fread(&clientes[i], sizeof(Cliente), 1, arquivo);
+    }
+
+    fclose(arquivo);
+    printf("Dados dos clientes carregados com sucesso.\n");
 }
